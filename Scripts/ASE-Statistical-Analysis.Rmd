@@ -1,1 +1,198 @@
+---
+title: "Analyse des Déterminants du Placement"
+author: "Konan Kevin, AGOSSOU Christine, GEHIN Nathan"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: flatly
+    code_folding: hide
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE,
+                      results = "markup",
+                      fig.align = "center",
+                      fig.width = 8)
+library(dplyr)
+library(ggplot2)
+library(stargazer)
+library(corrplot)
+library(lmtest)
+library(car)
+library(readxl)
+library(AER)
+```
+
+# Description du dataset :
+
+Il s'agit ici de données issus de l'INSEE et du DREES datant du 31/12/23 ou du 01/01/24
+Le but de ces données est d'analyser les déterminants du placement d'un enfant auprès de l'aide social à l'enfance (ASE).
+
+###Les variables : 
+
+*Il est important de noter que toutes ces variables sont pour chacun des département* 
+
+`Tx_placement`: Il s'agit du taux de placement d'enfants (entre 0 et 20 ans), en ‰,
+`Tx_cho`: Taux de chomage en %,
+`Tx_pauvre`: Taux de pauvreté en %, 
+`Tx_immi`: Taux d'immigration en %,
+`Tx_logement`: Taux de logement sociaux pour 10000 habitant, 
+`Tx_bac`: Part de la population ayant le bac,
+`Cap_acc`: Capacité d'acceuil pour 1000 enfant agé de 0 à 20 ans,
+`Acc_adu`: Capacité d'acceuil d'adulte handicapé en maison de soin, en ‰
+
+```{r}
+Enfant_placé <- "D:/Documents/Master DS2E/S1/Econometrie appliquée/Projet_Econométrie/Base_de_donnée_Enfant_placé.xlsx"
+bdd <- read_excel(Enfant_placé)
+head(bdd)
+str(bdd) 
+```
+
+```{r}
+bdd <- bdd %>% rename(Tx_placement = "taux_placement_enfant_(Pour_1000)",
+                      Tx_pauvre = "taux_pauvreté",
+                      Tx_logement = "taux_logement_sociaux_(pour_10000_hab)",
+                      Tx_cho = "taux_chomage",
+                      Tx_immi = "taux_immigration",
+                      Tx_bac = "Population_ayant_bac",
+                      Cap_acc = "Capacite_acceuil_(pour_1000)",
+                      Acc_adu = "Acceuil_Adultes_Handicapées_(Pour_1000)")
+```
+
+```{r}
+bdd$Tx_pauvre   <- as.numeric(gsub(",", ".", bdd$Tx_pauvre))
+bdd$Tx_cho      <- as.numeric(gsub(",", ".", bdd$Tx_cho))
+bdd$Tx_logement <- as.numeric(gsub(",", ".", bdd$Tx_logement))
+bdd$Acc_adu <- as.numeric(gsub(",",".",bdd$Acc_adu))
+colSums(is.na(bdd))
+bdd <- na.omit(bdd)
+str(bdd) 
+```
+
+Les chaines de caractère ont bien été transformé en valeur numérique.
+
+De plus pour les besoins de la regression il était nécessaire d'enlever les valeurs absentes, nous avons pu vérifierdata:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAASCAYAAABit09LAAAAUElEQVR4XmNgIBdkF5b+B2F0cRQAU4RXMboirIrRJdExUYrgiv8TCVCcMFgBuu9wYbCv0QXRMdzX+BRjBA02xRiKYABZMU5FMABWQUgRPgAAs1jacYNb7hYAAAAASUVORK5CYII= qu'elle n'était pas nombreuse et qu'elle concernais uniquement les départements d'outre-mer, notre travail se consacre ainsi uniquement aux départements de la France métropolitaine. 
+
+Analyse préliminaire : 
+```{r}
+ggplot(bdd, aes(x = Tx_pauvre, y = Tx_placement)) +
+                geom_point(alpha = 0.6, color = "blue") +
+                  geom_smooth(method ="lm", color = "red",
+                              fill = "white", alpha = 0.2) +
+                  labs(title = "Relation entre placement et pauvreté",
+                       x = "Taux de pauvreté (%)",
+                       y = "Taux de placement (‰)") +
+                         theme_minimal()
+```
+
+On observer clairement une relation positive entre nos deux variables
+
+```{r}
+bdd_pour_cor <- bdd %>% dplyr::select(Tx_placement, Tx_pauvre, Tx_cho, Tx_logement, Tx_immi, Tx_bac, Cap_acc) 
+
+corrplot(cor(bdd_pour_cor), method = "square",
+         diag = FALSE, addCoef.col = "black", number.cex = 0.8)
+```
+
+La matrice de corrélation(...)
+
+```{r}
+bdd <- bdd %>% mutate(Log_pauvre = log(Tx_pauvre), Log_Placement = log(Tx_placement), Log_cho = log(Tx_cho), Log_bac = log(Tx_bac), Log_logement = log(Tx_logement), Log_immi = log(Tx_immi), Log_acceuil = log(Cap_acc))
+```
+
+Nous avons également longement refléchi au type de régression que nous allions faire, nous avons donc testé un modèle Log-Log, et l'autre Lin-Lin : 
+
+```{r, result = 'markup'} 
+#Première regression linéaire : 
+model_lin <- lm(Tx_placement ~ Tx_pauvre, bdd)
+model_log <- lm(Log_Placement ~ Log_pauvre, bdd)
+suppressWarnings(
+  stargazer(model_lin, model_log, 
+          type = "text",
+          title =  "Comparaison des modèles",
+          header = FALSE))
+```
+
+Le modèle Logarithmique parait plus évident pour la significativité, néanmoins pour la compréhension et après la réalisation des deux modèles complets, il paraissait plus simple de choisir le modèle linéaire. En effet ce dernier explique déjà près de 55% de de la variance du taux de placement observée dans notre échantillon
+
+```{r, result = 'markup'}
+#Modèle complet : 
+model_1 <- lm(Tx_placement ~ Tx_pauvre + Tx_cho + Tx_immi + Cap_acc + Tx_logement + Tx_bac, bdd)
+suppressWarnings(
+  stargazer(model_1, type = "text", title = "Résulat de l'estimation (Lin-Lin)"))
+```
+
+```{r}
+plot(model_1, 1)
+resettest(model_1, power = 2:3, type = "regressor")
+
+```
+
+Le modèle choisi est mauvais car Le test de Ramsey RESET ne valide pas économétriquement ce choix avec une P-value de 0,0132 ce qui rejette l'hypothèse nulle de bonne spécification du modèle. 
+Il est ainsi nécessaire de spécifier correctement le modèle, nous avons décider de reprendre un modèle quaratique :
+
+```{r}
+model_2 <- lm(Tx_placement ~ Tx_pauvre + I(Tx_pauvre^2) + Cap_acc + Tx_bac + Tx_immi + Tx_cho + Tx_logement, bdd)
+stargazer(model_2, type = "text", title = "Résultats de l'estimaton quadratique")
+```
+
+```{r}
+plot(model_2, 1)
+resettest(model_2, power = 2:3, type = "regressor")
+```
+
+Les tests de spécification (Ramsey RESET) ayant rejeté les formes linéaires et quadratiques, nous avons retenu le modèle en double logarithme (Log-Log). Ce modèle est le seul à valider l'ensemble des tests de robustesse (Homoscédasticité, Normalité, Spécification) :
+
+```{r}
+model_3 <- lm(Log_Placement ~ Log_pauvre + Log_acceuil + Log_bac + Log_immi + Log_cho + Log_logement, bdd)
+stargazer(model_3, type = "text", title = "Résulats de l'estimation (Log-Log)")
+```
+
+```{r}
+plot(model_3, 1)
+resettest(model_3, power = 2:3, type = "regressor")
+```
+
+Verification de la multicolinéarité via un VIF; 
+```{r}
+vif(model_3)
+```
+
+Toutes la valeurs sont inférieur à 5 donc il n'y pas de problème de multicolinéarité
+
+Vérification de l'hétéroskedasticité :
+```{r}
+bptest(model_3)
+```
+
+Le test de Brusch-Pagan confirme l'hypothèse nulle ; p-value = 0.2384 > 0.05, le modèle est donc significatif, homoskédastique et ne souffre pas de multicolinéarité (VIF)
+
+
+Avec le théorème centrale limite on peut facilement expliquer que les erreur suivent une loi normal, néanmoins on peut faire le test de Shapiro afin de le prouver : 
+```{r}
+shapiro.test(resid(model_3))
+```
+
+La p-value = 0,3908 > 0.05 donc les résidus suivent bien une loi normale. 
+
+Le choix du modèle Log-Log est cohérent avec la nature des variables socio-économiques (revenus, pauvreté) qui suivent souvent des distributions asymétriques (Loi de Pareto). La transformation logarithmique permet de normaliser ces distributions et de capturer les effets de rendements décroissants
+
+Enfin il reste le détail de l'endogénéité, après de longue recherche il m'est parru relativement évident que cette dernière provenais probablement de la capacité d'acceuil, c'est pourquoi nous avons décider de le vérifier à l'aide de la capacité d'acceuil de personnes adultes handicapées, car la où les investissement sont fait dans le médico-social, ils sont également généralement fait aussi dans le social. 
+
+```{r}
+bdd <- bdd %>% mutate(Log_Handicape = log(Acc_adu))
+model_iv <- ivreg(Log_Placement ~ Log_acceuil + Log_pauvre + Log_bac + Log_immi + Log_cho + Log_logement | Log_Handicape + Log_pauvre + Log_bac + Log_immi + Log_cho + Log_logement, data = bdd)
+summary(model_iv, diagnostics = TRUE) 
+```
+
+Le test de Wu-Hausman (p-value = 0.003) révèle la présence d'une endogénéité significative sur la capacité d'accueil. L'estimation par Variable Instrumentale (IV) montre que le coefficient de la capacité d'accueil passe de 0,21 (MCO) à 0,59 (IV). Cela suggère que notre modèle principal (MCO) a tendance à sous-estimer l'effet d'offre induite.
+
+Cependant, bien que le modèle IV corrige ce biais, il entraîne une perte de précision (les écarts-types augmentent, rendant la variable Éducation moins significative). Par souci de lisibilité et de robustesse globale, nous basons nos conclusions principales sur le modèle MCO, tout en gardant à l'esprit que l'impact réel de l'offre de places est probablement plus fort que celui affiché (0,21)
+
+```{r}
+cor.test(bdd$Tx_immi, bdd$Tx_pauvre)
+```
 
