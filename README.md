@@ -21,5 +21,12 @@ L'objectif de cette étude est d'identifier les variables socio-économiques sig
 * `scripts/` : Code R source de l'analyse.
 * `docs/` : Rapport complet et interprétation des résultats.
 
+## 👥 Équipe du projet
+Ce projet a été réalisé en collaboration par :
+* **Nathan GEHIN** 
+* **Kevin KONAN**
+* **Christine AGOSSOU**
+
+*Travail réalisé dans le cadre du Master 1 DS2E - Université de Strasbourg.*
 ---
 *Projet réalisé dans le cadre du Master 1 DS2E - Université de Strasbourg.*
