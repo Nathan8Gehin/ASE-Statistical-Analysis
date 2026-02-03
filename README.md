@@ -27,6 +27,5 @@ Ce projet a été réalisé en collaboration par :
 * **Kevin KONAN**
 * **Christine AGOSSOU**
 
-*Travail réalisé dans le cadre du Master 1 DS2E - Université de Strasbourg.*
 ---
 *Projet réalisé dans le cadre du Master 1 DS2E - Université de Strasbourg.*
