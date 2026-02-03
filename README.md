@@ -2,6 +2,8 @@
 
 > **Description :** Analyse des facteurs influençant les décisions de placement en protection de l'enfance via une modélisation statistique sous R.
 
+> [🔗 Consulter le rapport interactif ici]( https://nathan8gehin.github.io/ASE-Statistical-Analysis/Rapport_ASE/)
+
 ## 🎯 Objectif
 L'objectif de cette étude est d'identifier les variables socio-économiques significatives qui impactent les mesures de placement. Ce projet mobilise les outils de l'économétrie pour apporter un éclairage quantitatif sur les problématiques de l'Aide Sociale à l'Enfance (ASE).
 
