@@ -1,22 +1,25 @@
-# ASE-Statistical-Analysis
-Analyse économétrique des déterminants du placement en foyer (ASE) - Modélisation statistique sous R
 # Analyse Économétrique : Déterminants du Placement à l'ASE
 
+> **Description :** Analyse des facteurs influençant les décisions de placement en protection de l'enfance via une modélisation statistique sous R.
+
 ## 🎯 Objectif
-Modélisation statistique des facteurs influençant les décisions de placement en protection de l'enfance. Ce projet utilise des méthodes économétriques pour identifier les variables socio-économiques significatives.
+L'objectif de cette étude est d'identifier les variables socio-économiques significatives qui impactent les mesures de placement. Ce projet mobilise les outils de l'économétrie pour apporter un éclairage quantitatif sur les problématiques de l'Aide Sociale à l'Enfance (ASE).
 
 ## 💻 Stack Technique
-* **Langage :** [R ou Python]
-* **Données :** Fichier Excel (données anonymisées)
-* **Modèles :** Régression [Logit / MCO / Probit]
+* **Langage :** R 
+* **Données :** Fichier Excel (données anonymisées - Décembre 2023)
+* **Modèles :** Régression Linéaire Multiple (MCO)
 
 ## 📈 Méthodologie
-1. Nettoyage des données Excel.
-2. Analyse descriptive et corrélations.
-3. Estimation du modèle économétrique.
-4. Test de significativité des coefficients.
+1. **Structuration et nettoyage des données (ETL) :** Création d'une base de données exploitable, traitement des valeurs manquantes et codage des variables.
+2. **Analyse descriptive :** Visualisation des données et calcul des matrices de corrélations.
+3. **Estimation économétrique :** Mise en œuvre du modèle MCO pour quantifier les impacts.
+4. **Validation statistique :** Tests de significativité des coefficients (T-test) et analyse de la qualité globale du modèle ($R^2$).
 
-## 📂 Contenu
-* `data/` : Jeu de données.
-* `scripts/` : Code de l'analyse.
-* `rapport.pdf` : Interprétation complète des résultats.
+## 📂 Structure du dépôt
+* `data/` : Jeu de données (format anonymisé).
+* `scripts/` : Code R source de l'analyse.
+* `docs/` : Rapport complet et interprétation des résultats.
+
+---
+*Projet réalisé dans le cadre du Master 1 DS2E - Université de Strasbourg.*
